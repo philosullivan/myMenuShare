@@ -8,3 +8,5 @@ storage/*
 **/.DS_Store
 *.bak
 .env
+*.txt
+app/templates/sign-up-copy.twig

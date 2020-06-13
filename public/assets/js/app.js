@@ -39,6 +39,14 @@ $(document)
   .on("submit", function(ev) {
     // ev.preventDefault();
     console.log("Submit for form id "+ev.target.id+" intercepted");
+    $.LoadingOverlay('show', {
+      background: 'rgba(37, 37, 34, 0.8)',
+      imageColor: 'white',
+  });
+  window.setTimeout(function() {
+      window.location.href = url;
+      $.LoadingOverlay( 'hide', true );
+  }, 850);
   });
 // You can bind field or form event selectively
 /*

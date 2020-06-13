@@ -20,6 +20,7 @@ class IndexAction {
 	private $view;
 	private $qrcode;
 	public $data = [];
+	public $errors = [];
 	private $functions;
 	private $db;
 
@@ -30,6 +31,8 @@ class IndexAction {
 		$this->qrcode    = $qrcode;
 		$this->functions = $functions;
 		$this->db        = $db;
+		$this->data      = $data;
+		$this->errors    = $errors;
 	}
 
 	public function load_index( Request $request, Response $response, $args ) {
@@ -43,48 +46,71 @@ class IndexAction {
 	}
 
 	public function post_sign_up( Request $request, Response $response, $args ) {
-		$this->logger->info( 'Posting Signup' );
+		$this->logger->info( 'Creating account' );
 
 		// Get posted form values.
 		$post_data = $request->getParsedBody();
-		$bus_data  = array();
-		$user_data = array();
 
-		// Check user email.
-		// $email_exists = $this->functions->record_exists( 'users', 'user_email', $post_data['user_email'] );
+		// Original password.
+		$orig_password = $post_data['user_password'];
 
-		// Create a UUID.
-		$bus_id = $this->functions->create_id();
-
-		// Add User ID to the array.
-		$post_data['bus_id'] = $bus_id;
-
-		// Seperate business and user data into different arrays.
+		// Debug.
 		foreach ( $post_data as $key => $value ) {
 			$this->logger->info( $key . ':' . $value );
 		}
 
-		// Add business here.
-		/*
-		try {
-			if ( ! $this->db->insert( 'business', $bus_data ) ) {
-				$db_error = $this->db->getLastError();
-				$this->logger->error( $db_error );
-				$this->data['errors']['insert_error'] = $db_error;
-			} else {
-				$this->logger->error( 'Record Inserted' );
-			}
-		} catch ( \Exception $e ) {
-			$this->logger->error( $e );
-			$data['data']['errors']['insert_exception'] = $e;
-			return false;
+		// Check user email.
+		$email_exists = $this->functions->record_exists( 'users', 'user_email', $post_data['user_email'] );
+
+		if ( $post_data['user_password'] !== $post_data['user_password_confirm'] ) {
+			$this->add_error( 'Passwords do not match' );
+			$this->logger->error( 'Passwords do not match' );
 		}
-		*/
 
-		// Add contact here if business was added.
+		if ( $email_exists ) {
+			$this->add_error( 'User email exists' );
+			$this->logger->error( $post_data['user_email'] . ' exists.' );
+			//
+			$this->data['user'] = $post_data;
+		} else {
+			// Create a user id (UUID).
+			$user_id = $this->functions->create_id();
 
-		//
-		// $this->logger->info( print_r( $post_data, true ) );
+			// Add User ID to the array.
+			$post_data['user_id'] = $user_id;
+
+			// hash the password.
+			$user_password              = $post_data['user_password'];
+			$post_data['user_password'] = $this->functions->encrypt_decrypt( 'encrypt', $user_password );
+
+			// Remove the user password confirm item.
+			// TODO - compare password and confirm password, before removing it?
+			unset( $post_data['user_password_confirm'] );
+
+			//
+			$user_data = $post_data;
+
+			// Add user.
+			try {
+				if ( ! $this->db->insert( 'users', $user_data ) ) {
+					$db_error = $this->db->getLastError();
+					$this->logger->error( $db_error );
+					$this->add_error( $db_error );
+				} else {
+					$this->logger->info( 'Record Inserted' );
+				}
+			} catch ( \Exception $e ) {
+				$this->add_error( $e );
+				$this->logger->error( $e );
+				return false;
+			}
+		}
+
+		// Add any errors to the return.
+		if ( $this->errors ) {
+			$this->data['errors'] = $this->errors;
+		}
+
 		return $this->view->render( $response, 'sign-up.twig', [ 'return' => $this->data ] );
 	}
 
@@ -134,5 +160,11 @@ class IndexAction {
 		$this->data['image'] = $this->qrcode->writeDataUri();
 
 		return $this->view->render( $response, 'test.twig', [ 'return' => $this->data ] );
+	}
+
+	public function add_error( $error ) {
+		$error_count               = count( $this->errors );
+		$error_id                  = $error_count + 1;
+		$this->errors[ $error_id ] = $error;
 	}
 }

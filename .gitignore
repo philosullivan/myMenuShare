@@ -1,0 +1,10 @@
+node_modules/*
+vendor
+logs/*
+cache/*
+storage/*
+!log/.gitkeep
+!cache/.gitkeep
+**/.DS_Store
+*.bak
+.env

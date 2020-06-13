@@ -1,0 +1,20 @@
+<br>
+<ul class="accordion" data-accordion data-allow-all-closed="true">
+    <li class="accordion-item" data-accordion-item>
+        <a href="#" class="accordion-title"> <i class="fas fa-bug"></i> Debug</a>
+        <div class="accordion-content" data-tab-content>
+            <div class="expanded row">
+                <div class="columns small-12">
+                    <h5>Dump</h5>
+                    <div class="dump">{{ dump()}}</div>
+                </div>
+                <!--
+                <div class="columns small-6">
+                    <h5>Sessions</h5>
+                    {#{{ session|json_encode(constant('JSON_PRETTY_PRINT'))|raw }}#}
+                </div>
+                -->
+            </div>
+        </div>
+    </li>
+</ul>

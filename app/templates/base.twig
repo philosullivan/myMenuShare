@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en" dir="ltr">
+
+<head>
+  {% block head %}
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="">
+  {% block meta %}
+  
+  {% endblock %}
+    <title>myMenuShare.com</title>
+    <link rel="stylesheet" href="{{ base_url() }}/assets/css/foundation.css" />
+    <link rel="stylesheet" href="{{ base_url() }}/assets/css/colors.css" />
+    <link rel="stylesheet" href="{{ base_url() }}/assets/fonts/all.css" />
+    <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="{{ base_url() }}/assets/css/app.css" />
+  {% endblock %}
+</head>
+
+<body>
+
+  <header data-sticky-container>
+    <div data-sticky data-options="marginTop:0;" style="width:100%">
+      <div class="title-bar">
+        <div class="title-bar-left">
+          <button class="white-text fas fa-bars fa-2x" type="button" data-open="offCanvasLeft" style="cursor: pointer;"></button>
+        </div>
+        <div class="title-bar-right">
+          <span class="title-bar-title"><h5>myMenuShare</h5></span>
+        </div>
+      </div>
+    </div>
+  </header>
+ 
+  <main>
+    <div class="off-canvas position-left" id="offCanvasLeft" data-off-canvas data-auto-focus="false" data-transition="push">
+      <div class="row">
+        <div class="columns small-12">
+          &nbsp;
+        </div>
+        <div class="columns small-12">
+          {% include 'inc/menu.twig' %}
+        </div>
+      </div>
+    </div>
+    {% block body %}
+    
+    {% endblock %}
+  </main>
+
+  {% include 'inc/debug.twig' %}
+  {#{% include 'inc/footer.twig' %}#}
+
+  {% block bottom %}
+  <script src="{{ base_url() }}/assets/js/jquery.js"></script>
+  <script src="{{ base_url() }}/assets/js/what-input.js"></script>
+  <script src="{{ base_url() }}/assets/js/foundation.min.js"></script>
+  <script src="{{ base_url() }}/assets/js/app.js"></script>
+  <script src="{{ base_url() }}/assets/js/loadingoverlay.js"></script>
+  {% endblock %} 
+  
+  {% block javascripts_footer %}
+  
+  {% endblock %}
+
+</body>
+</html>

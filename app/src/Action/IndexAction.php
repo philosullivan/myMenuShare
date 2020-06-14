@@ -87,22 +87,24 @@ class IndexAction {
 			// TODO - compare password and confirm password, before removing it?
 			unset( $post_data['user_password_confirm'] );
 
-			//
-			$user_data = $post_data;
-
 			// Add user.
-			try {
-				if ( ! $this->db->insert( 'users', $user_data ) ) {
-					$db_error = $this->db->getLastError();
-					$this->logger->error( $db_error );
-					$this->add_error( $db_error );
-				} else {
-					$this->logger->info( 'Record Inserted' );
+			if ( empty( $this->errors ) ) {
+				try {
+					if ( ! $this->db->insert( 'users', $post_data ) ) {
+						$db_error = $this->db->getLastError();
+						$this->logger->error( $db_error );
+						$this->add_error( $db_error );
+					} else {
+						$this->logger->info( 'Record Inserted' );
+						$this->data['result'] = 'success';
+					}
+				} catch ( \Exception $e ) {
+					$this->add_error( $e );
+					$this->logger->error( $e );
+					return false;
 				}
-			} catch ( \Exception $e ) {
-				$this->add_error( $e );
-				$this->logger->error( $e );
-				return false;
+			} else {
+				$this->data['user'] = $post_data;
 			}
 		}
 

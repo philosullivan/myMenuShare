@@ -35,6 +35,26 @@ $container['validator'] = function ( $c ) {
 	return $validator;
 };
 
+// Email container.
+$container['mailer'] = function( $c ) {
+	$mailer             = new PHPMailer\PHPMailer\PHPMailer();
+	$mailer->SMTPDebug  = 0;
+	$mailer->Host       = 'smtp.gmail.com';
+	$mailer->Port       = 587;
+	$mailer->SMTPAuth   = true;
+	$mailer->Username   = 'phil.osullivan@gmail.com';
+	$mailer->Password   = 'xsw2ZAQ!';
+	$mailer->SMTPSecure = 'tls';
+	$mailer->From       = 'phil.osullivan@gmail.com';
+	$mailer->FromName   = 'Phil O\'Sullivan';
+	$mailer->WordWrap   = 50;
+	$mailer->addAddress( 'phil.osullivan@gmail.com', 'Phil O\'Sullivan' );
+	$mailer->addReplyTo( 'phil.osullivan@gmail.com', 'Phil O\'Sullivan' );
+	$mailer->isSMTP();
+	$mailer->isHTML( true );
+	return $mailer;
+};
+
 // QR code.
 $container['qrcode'] = function ( $c ) {
 	$qrcode = new QrCode();
@@ -43,7 +63,7 @@ $container['qrcode'] = function ( $c ) {
 
 // Functions.
 $container['functions'] = function ( $c ) {
-	return new App\Library\FunctionsLibrary( $c->get( 'db' ), $c->get( 'logger' ), $c->get( 'settings' ), $c->get( 'view' ) );
+	return new App\Library\FunctionsLibrary( $c->get( 'db' ), $c->get( 'logger' ), $c->get( 'settings' ), $c->get( 'view' ), $c->get( 'mailer' ) );
 };
 
 // Monolog.

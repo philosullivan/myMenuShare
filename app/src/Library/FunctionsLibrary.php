@@ -11,13 +11,15 @@ class FunctionsLibrary {
 	private $db;
 	private $logger;
 	private $settings;
+	private $mailer;
 	public $data   = [];
 	public $errors = [];
 
-	public function __construct( $db, LoggerInterface $logger, $settings ) {
+	public function __construct( $db, LoggerInterface $logger, $settings, $mailer ) {
 		$this->db       = $db;
 		$this->logger   = $logger;
 		$this->settings = $settings;
+		$this->mailer   = $mailer;
 	}
 
 	public function create_id() {
@@ -143,7 +145,7 @@ class FunctionsLibrary {
 
 		// Add the created token to the json return.
 		$verification_token = $this->encrypt_decrypt( 'encrypt', $this->create_jwt( $payload ) );
-		$link               = 'http://' . $this->settings['email']['verify_base_url'] . '/public/verify?verification_token=' . $verification_token;
+		$link               = 'http://' . $this->settings['email']['verify_base_url'] . '/verify?verification_token=' . $verification_token;
 
 		$this->logger->info( 'Adding Verification token: ' . $verification_token . ' to email.' );
 		$this->logger->info( 'Link: ' . $link );
@@ -179,7 +181,7 @@ class FunctionsLibrary {
 			);
 
 			// Insert/Update raw data into verification table.
-			$this->db->replace( 'verification', $data );
+			// $this->db->replace( 'verification', $data );
 
 			$this->logger->error( 'Email sent successfully' );
 			$return = true;
@@ -187,5 +189,78 @@ class FunctionsLibrary {
 		return $return;
 	}
 
+	//
+	public function user_verify( Request $request, Response $response, $args ) {
+		// Encrypted JWT from url.
+		$params             = $request->getQueryParams();
+		$verification_token = $params['verification_token'];
+
+		// Look in verification table to make sure a this token was sent to the user.
+		$record = $this->db->where( 'verification_token', $verification_token )->getOne( 'verification' );
+
+		// See if the token exists in the table.
+		if ( $record ) {
+			// Unencrypt the JWT/verification token.
+			$unencrypted_token = $this->functions->encrypt_decrypt( 'decrypt', $verification_token );
+			$decoded_jwt       = $this->functions->decode_jwt( $unencrypted_token );
+
+			// Make sure user id's match.
+			if ( $record['verification_user_id'] !== $decoded_jwt[0]->user_id ) {
+				$this->logger->error( 'User ID\'s DO NOT match' );
+				$data['data']['errors']['error'] = 'User ID\'s DO NOT match';
+			}
+
+			// Make sure not expired.
+			if ( time() > $decoded_jwt[0]->exp ) {
+				$this->logger->info( 'Token has expired' );
+				$data['data']['errors']['error'] = 'Token has expired';
+			}
+
+			// Has it already been verified.
+			if ( $record['verification_status'] ) {
+				$this->logger->info( 'Token was previously verified on ' . $record['verification_updated'] );
+				$data['data']['errors']['error'] = 'Token was previously verified on ' . $record['verification_updated'];
+			}
+		} else {
+			// Verification token was not found in the verification table.
+			$this->logger->error( 'No Record Found' );
+			$data['data']['errors']['error'] = 'Verification token not found in verification table.';
+		}
+
+		if ( empty( $errors ) ) {
+			// If no errors, then update the verification status on both tables.
+			$verification_data = array(
+				'verification_status' => 1,
+			);
+			$this->db->where( 'verification_user_id', $record['verification_user_id'] );
+			if ( $this->db->update( 'verification', $verification_data ) ) {
+				$this->logger->info( 'Verification table updated.' );
+				$data['data']['verification_table'] = 1;
+			} else {
+				$this->logger->info( $this->db->getLastError() );
+				$data['data']['errors']['verification_table'] = 'failed';
+			}
+
+			$user_data = array(
+				'user_status'   => 1,
+				'user_verified' => 1,
+			);
+			$this->db->where( 'user_id', $record['verification_user_id'] );
+			if ( $this->db->update( 'users', $user_data ) ) {
+				$this->logger->info( 'Users table updated.' );
+				$data['data']['users_table'] = 1;
+			} else {
+				$this->logger->info( $this->db->getLastError() );
+				$data['data']['errors']['users_table'] = 'failed';
+			}
+		} else {
+			$this->logger->error( 'Verification failed.' );
+		}
+
+		// Add the result to the return.
+		isset( $data['data']['errors'] ) ? $data['result']    = 0 : $data['result'] = 1;
+		isset( $data['data']['errors'] ) ? $this->http_status = 403 : $this->http_status = 200;
+		return $this->view->render( $response, 'verify.twig', [ 'return' => $data ] );
+	}
 
 }

@@ -9,6 +9,7 @@ return [
 		'displayErrorDetails'               => true,
 		'addContentLengthHeader'            => true,
 		'debug'                             => true,
+		'routerCacheFile'                   => __DIR__ . '/../cache/routes.cache.php',
 		'env'                               => getenv( 'ENV' ),
 		'auth_type'                         => getenv( 'AUTH_TYPE' ),
 		'version'                           => getenv( 'VERSION' ),

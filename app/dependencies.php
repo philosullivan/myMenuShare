@@ -63,7 +63,7 @@ $container['qrcode'] = function ( $c ) {
 
 // Functions.
 $container['functions'] = function ( $c ) {
-	return new App\Library\FunctionsLibrary( $c->get( 'db' ), $c->get( 'logger' ), $c->get( 'settings' ), $c->get( 'view' ), $c->get( 'mailer' ) );
+	return new App\Library\FunctionsLibrary( $c->get( 'db' ), $c->get( 'logger' ), $c->get( 'settings' ), $c->get( 'mailer' ), $c->get( 'view' ) );
 };
 
 // Monolog.

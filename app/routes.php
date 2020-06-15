@@ -27,3 +27,10 @@ $app->get( '/help', App\Action\IndexAction::class . ':load_help' )->setName( 'lo
 
 // Load test page.
 $app->get( '/test', App\Action\IndexAction::class . ':load_test' )->setName( 'load_test' );
+
+/**
+ * Verify user.
+ *
+ * @param string {verification_token} generated and emailed verification token.
+ */
+$app->get( '/verify', App\Action\UsersAction::class . ':user_verify' )->setName( 'get.verify.user' );

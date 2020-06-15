@@ -41,7 +41,11 @@ class IndexAction {
 	}
 
 	public function load_sign_up( Request $request, Response $response, $args ) {
-		$this->logger->info( 'loading help' );
+		$this->logger->info( 'loading Signup form' );
+		$name                     = $request->getAttribute( 'csrf_name' );
+		$value                    = $request->getAttribute( 'csrf_value' );
+		$this->data['csrf_name']  = $name;
+		$this->data['csrf_value'] = $value;
 		return $this->view->render( $response, 'sign-up.twig', [ 'return' => $this->data ] );
 	}
 
@@ -84,8 +88,9 @@ class IndexAction {
 			$post_data['user_password'] = $this->functions->encrypt_decrypt( 'encrypt', $user_password );
 
 			// Remove the user password confirm item.
-			// TODO - compare password and confirm password, before removing it?
 			unset( $post_data['user_password_confirm'] );
+			unset( $post_data['csrf_name'] );
+			unset( $post_data['csrf_value'] );
 
 			// Add user.
 			if ( empty( $this->errors ) ) {
@@ -97,6 +102,7 @@ class IndexAction {
 					} else {
 						$this->logger->info( 'Record Inserted' );
 						$this->data['result'] = 'success';
+						$this->functions->send_verification_email( $user_id, $post_data['user_email'] );
 					}
 				} catch ( \Exception $e ) {
 					$this->add_error( $e );

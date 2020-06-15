@@ -9,4 +9,3 @@ storage/*
 *.bak
 .env
 *.txt
-app/templates/sign-up-copy.twig

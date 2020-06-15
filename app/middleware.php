@@ -6,6 +6,8 @@ use \Psr\Http\Message\ResponseInterface as Response;
 $container = $app->getContainer();
 $debug     = $container->get( 'settings' )['debug'];
 
+$app->add( new Slim\Csrf\Guard() );
+
 // Debug logging middleware.
 $app->add( function ( Request $request, Response $response, callable $next ) use ( $app ) {
 	$this->logger->info( 'Start Route Logging' );

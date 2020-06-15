@@ -1,36 +1,19 @@
 {% extends "base.twig" %}
 
 {% block body %}
-<div class="row content">
+<div class="row title">
     <div class="columns small-12">
-        <hr>
-        <h3><i class="far fa-envelope-open"></i> 
-          Email Verification - 
-          {% if return.result == 1 %}
-            Successful
-          {% else %}
-            Failed
-          {% endif %}
-        </h3>
-        <hr>
-    </div>
-
-    <div class="columns small-12">
-      {% if return.data.errors %}
-        {% for error in return.data.errors %}
-          <i class="fas fa-exclamation-circle"></i> {{ error }} <br>
-        {% endfor %}
-      {% else %}
-          <i class="fas fa-check"></i> Verified
-      {% endif %}
+        <h1>Verify</h1>
     </div>
 </div>
 
-<div class="row content">
-  <div class="columns small-12">
-    {#{{ dump( return ) }}#}
-  </div>
+
+<div class="row title">
+    <div class="columns small-12 text-center">
+        <a class="button" href="/log-in"> Log In </a>
+    </div>
 </div>
+
 {% endblock %}
 
 {% block javascripts %}

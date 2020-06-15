@@ -89,6 +89,7 @@ class FunctionsLibrary {
 		return $decoded_jwt;
 	}
 
+	/*
 	public function validate_jwt( $user_id, $user_scope, $user_last_updated ) {
 		// Hold any found errors.
 		$errors = [];
@@ -132,6 +133,7 @@ class FunctionsLibrary {
 
 		return $return;
 	}
+	*/
 
 	public function send_verification_email( $user_id, $user_email ) {
 		$this->logger->info( 'Sending Email' );
@@ -187,80 +189,6 @@ class FunctionsLibrary {
 			$return = true;
 		}
 		return $return;
-	}
-
-	//
-	public function user_verify( Request $request, Response $response, $args ) {
-		// Encrypted JWT from url.
-		$params             = $request->getQueryParams();
-		$verification_token = $params['verification_token'];
-
-		// Look in verification table to make sure a this token was sent to the user.
-		$record = $this->db->where( 'verification_token', $verification_token )->getOne( 'verification' );
-
-		// See if the token exists in the table.
-		if ( $record ) {
-			// Unencrypt the JWT/verification token.
-			$unencrypted_token = $this->functions->encrypt_decrypt( 'decrypt', $verification_token );
-			$decoded_jwt       = $this->functions->decode_jwt( $unencrypted_token );
-
-			// Make sure user id's match.
-			if ( $record['verification_user_id'] !== $decoded_jwt[0]->user_id ) {
-				$this->logger->error( 'User ID\'s DO NOT match' );
-				$data['data']['errors']['error'] = 'User ID\'s DO NOT match';
-			}
-
-			// Make sure not expired.
-			if ( time() > $decoded_jwt[0]->exp ) {
-				$this->logger->info( 'Token has expired' );
-				$data['data']['errors']['error'] = 'Token has expired';
-			}
-
-			// Has it already been verified.
-			if ( $record['verification_status'] ) {
-				$this->logger->info( 'Token was previously verified on ' . $record['verification_updated'] );
-				$data['data']['errors']['error'] = 'Token was previously verified on ' . $record['verification_updated'];
-			}
-		} else {
-			// Verification token was not found in the verification table.
-			$this->logger->error( 'No Record Found' );
-			$data['data']['errors']['error'] = 'Verification token not found in verification table.';
-		}
-
-		if ( empty( $errors ) ) {
-			// If no errors, then update the verification status on both tables.
-			$verification_data = array(
-				'verification_status' => 1,
-			);
-			$this->db->where( 'verification_user_id', $record['verification_user_id'] );
-			if ( $this->db->update( 'verification', $verification_data ) ) {
-				$this->logger->info( 'Verification table updated.' );
-				$data['data']['verification_table'] = 1;
-			} else {
-				$this->logger->info( $this->db->getLastError() );
-				$data['data']['errors']['verification_table'] = 'failed';
-			}
-
-			$user_data = array(
-				'user_status'   => 1,
-				'user_verified' => 1,
-			);
-			$this->db->where( 'user_id', $record['verification_user_id'] );
-			if ( $this->db->update( 'users', $user_data ) ) {
-				$this->logger->info( 'Users table updated.' );
-				$data['data']['users_table'] = 1;
-			} else {
-				$this->logger->info( $this->db->getLastError() );
-				$data['data']['errors']['users_table'] = 'failed';
-			}
-		} else {
-			$this->logger->error( 'Verification failed.' );
-		}
-
-		// Add the result to the return.
-		isset( $data['data']['errors'] ) ? $data['result']    = 0 : $data['result'] = 1;
-		isset( $data['data']['errors'] ) ? $this->http_status = 403 : $this->http_status = 200;
-		return $this->view->render( $response, 'verify.twig', [ 'return' => $data ] );
 	}
 
 }

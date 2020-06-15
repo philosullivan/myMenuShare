@@ -1,11 +1,53 @@
 {% extends "base.twig" %}
 
 {% block body %}
+
 <div class="row title">
-    <div class="columns small-12">
-        <h1>Log In</h1>
-    </div>
+  <div class="columns small-12">
+    <h5>Log In</h5>
+  </div>
 </div>
+
+
+<div class="row">
+  <form class="columns small-12  large-6 large-offset-3 form wrapper" action="/sign-up" method="POST" data-abide>
+
+      <div data-abide-error class="alert callout" aria-live="assertive" style="display: none;">
+          <p><i class="fas fa-exclamation-triangle"></i> There are some errors in your log in form.</p>
+      </div>
+
+      <div class="row">
+        <div class="columns small-12">
+          <label>
+            Email Address
+            <input type="text" id="user_email" name="user_email" placeholder="Email" maxlength="48" aria-describedby="error_user_email" value="" required/>
+            <span id="error_user_email" class="form-error"><i class="fas fa-exclamation"></i> <b>Email Address</b> field is required.</span>
+          </label>
+        </div>
+      </div>
+
+        <div class="row">
+        <div class="columns small-12">
+          <label>
+            Password
+            <input type="password" id="user_password" name="user_password" placeholder="Password" maxlength="8" aria-describedby="error_user_password" value="" required/>
+            <span id="error_user_password" class="form-error"><i class="fas fa-exclamation"></i> <b>Password</b> field is required.</span>
+          </label>
+        </div>
+      </div>
+
+      <input type="hidden" name="csrf_name" value="{{ return.csrf_name }}">
+      <input type="hidden" name="csrf_value" value="{{ return.csrf_value }}">
+
+      <div class="row">
+      <div class="columns small-12">
+        <button type="submit" class="button expanded">Submit</button>
+      </div>
+    </div>
+ 
+  </form>
+</div>
+
 {% endblock %}
 
 {% block javascripts %}

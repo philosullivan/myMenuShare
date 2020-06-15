@@ -4,7 +4,8 @@ namespace App\Action;
 use Psr\Log\LoggerInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
-
+use \Firebase\JWT\JWT;
+use \Tuupola\Base62;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\LabelAlignment;
 use Endroid\QrCode\QrCode;
@@ -102,7 +103,10 @@ class IndexAction {
 					} else {
 						$this->logger->info( 'Record Inserted' );
 						$this->data['result'] = 'success';
-						$this->functions->send_verification_email( $user_id, $post_data['user_email'] );
+						if ( ! $this->functions->send_verification_email( $user_id, $post_data['user_email'] ) ) {
+							$this->logger->error( 'Error sending email verification' );
+						}
+						// session_unset( 'csrf' );
 					}
 				} catch ( \Exception $e ) {
 					$this->add_error( $e );
@@ -110,13 +114,9 @@ class IndexAction {
 					return false;
 				}
 			} else {
-				$this->data['user'] = $post_data;
+				$this->data['user']   = $post_data;
+				$this->data['errors'] = $this->errors;
 			}
-		}
-
-		// Add any errors to the return.
-		if ( $this->errors ) {
-			$this->data['errors'] = $this->errors;
 		}
 
 		return $this->view->render( $response, 'sign-up.twig', [ 'return' => $this->data ] );
@@ -174,5 +174,54 @@ class IndexAction {
 		$error_count               = count( $this->errors );
 		$error_id                  = $error_count + 1;
 		$this->errors[ $error_id ] = $error;
+	}
+
+	//
+	public function user_verify( Request $request, Response $response, $args ) {
+		// Encrypted JWT from url.
+		$params             = $request->getQueryParams();
+		$verification_token = $params['verification_token'];
+
+		// Unencrypt the JWT/verification token.
+		$unencrypted_token = $this->functions->encrypt_decrypt( 'decrypt', $verification_token );
+		$this->logger->info( $unencrypted_token );
+		$decoded_jwt = $this->functions->decode_jwt( $unencrypted_token );
+
+		$this->logger->info( '=== Start Decoded Token ===' );
+		$this->logger->info( 'Decoded user_id: ' . $decoded_jwt[0]->user_id );
+		$this->logger->info( 'Decoded user_email: ' . $decoded_jwt[0]->user_email );
+		$this->logger->info( 'Decoded iss: ' . $decoded_jwt[0]->iss );
+		$this->logger->info( 'Decoded iat: ' . $decoded_jwt[0]->iat );
+		$this->logger->info( 'Decoded exp: ' . $decoded_jwt[0]->exp );
+		$this->logger->info( '==== End Decoded Token ====' );
+
+		// Make sure not expired.
+		if ( time() > $decoded_jwt[0]->exp ) {
+			$this->logger->error( 'Token has expired' );
+			$this->add_error( 'Token has expired' );
+		}
+
+		// Add any errors to the return.
+		if ( $this->errors ) {
+			$this->data['errors'] = $this->errors;
+			return $this->view->render( $response, 'error.twig', [ 'return' => $data ] );
+		} else {
+			// Update record here.
+			$this->logger->error( 'Token verified' );
+			// Update the users record.
+			$user_data = array(
+				'user_status'   => 1,
+				'user_verified' => 1,
+			);
+			$this->db->where( 'user_id', $decoded_jwt[0]->user_id );
+			if ( $this->db->update( 'users', $user_data ) ) {
+				$this->logger->info( 'Users table updated.' );
+			} else {
+				$this->logger->info( $this->db->getLastError() );
+				$this->add_error( 'Update user status failed' );
+				return $this->view->render( $response, 'error.twig', [ 'return' => $data ] );
+			}
+			return $this->view->render( $response, 'verify.twig', [ 'return' => $data ] );
+		}
 	}
 }

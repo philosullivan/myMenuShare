@@ -14,6 +14,7 @@ return [
 		'auth_type'                         => getenv( 'AUTH_TYPE' ),
 		'version'                           => getenv( 'VERSION' ),
 		'salt'                              => getenv( 'SALT' ),
+		'jwt'                               => getenv( 'JWT' ),
 		'storage'                           => __DIR__ . '/storage',
 		'view'                              => [
 			'template_path' => __DIR__ . '/templates',
@@ -23,6 +24,9 @@ return [
 			'debug'       => true,
 			'auto_reload' => true,
 			],
+		],
+		'email' => [
+			'verify_base_url' => getenv( 'VERIFY_BASE_URL' ),
 		],
 		'logger' => [
 			'name' => getenv( 'SITE_NAME' ),

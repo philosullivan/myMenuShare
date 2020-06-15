@@ -33,4 +33,4 @@ $app->get( '/test', App\Action\IndexAction::class . ':load_test' )->setName( 'lo
  *
  * @param string {verification_token} generated and emailed verification token.
  */
-$app->get( '/verify', App\Action\UsersAction::class . ':user_verify' )->setName( 'get.verify.user' );
+$app->get( '/verify', App\Action\IndexAction::class . ':user_verify' )->setName( 'get.verify.user' );
